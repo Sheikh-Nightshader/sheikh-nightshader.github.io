@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sheikh Nightshader Cyber Security - Understanding the types of attacks hackers use.">
+    <title>Types of Attacks</title>
+    <style>
+        body {
+            background-color: black;
+            color: green;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid green;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin: 0;
+        }
+
+        nav {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        nav a {
+            color: green;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 1.2em;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        main {
+            padding: 40px;
+            text-align: left;
+        }
+
+        footer {
+            padding: 20px;
+            text-align: center;
+            border-top: 2px solid green;
+            margin-top: 40px;
+        }
+
+        h2 {
+            font-size: 2em;
+            margin-top: 20px;
+        }
+
+        p {
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-top: 10px;
+        }
+
+        ul {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Types of Attacks</h1>
+        <nav>
+            <a href="index.html">Back</a>
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <h2>1. Phishing</h2>
+            <p>Phishing is a cyber attack that typically uses email or instant messaging to trick users into providing sensitive data, such as usernames, passwords, and credit card details. Attackers often create fake websites that mimic legitimate ones, leading users to unwittingly enter their personal information.</p>
+            <p><strong>Impacts:</strong> Compromised accounts, financial loss, identity theft.</p>
+            <p><strong>Prevention:</strong> Use email filtering, educate users on identifying phishing attempts, and implement two-factor authentication (2FA) where possible.</p>
+        </section>
+
+        <section>
+            <h2>2. Malware</h2>
+            <p>Malware is malicious software designed to disrupt, damage, or gain unauthorized access to systems. Common types include viruses, worms, trojans, and ransomware.</p>
+            <p><strong>Impacts:</strong> Data loss, system damage, unauthorized access to sensitive information.</p>
+            <p><strong>Prevention:</strong> Use reputable antivirus software, keep software updated, and avoid downloading from untrusted sources.</p>
+        </section>
+
+        <section>
+            <h2>3. Denial of Service (DoS) / Distributed Denial of Service (DDoS)</h2>
+            <p>DoS and DDoS attacks aim to make a system or service unavailable by overwhelming it with traffic. In a DoS attack, a single system is responsible for generating the traffic, while a DDoS attack involves multiple compromised systems or botnets flooding the target.</p>
+            <p><strong>Impacts:</strong> Service outages, loss of revenue, damage to reputation.</p>
+            <p><strong>Prevention:</strong> Use traffic filtering, rate limiting, and deploy DDoS protection services like Cloudflare or Akamai. Configure firewalls to block malicious traffic.</p>
+            <p><strong>Types of DoS/DDoS Attacks:</strong></p>
+            <ul>
+                <li><strong>Volumetric Attacks:</strong> Flood the target with massive amounts of traffic, using up bandwidth.</li>
+                <li><strong>Application-layer Attacks:</strong> Focus on specific applications, exhausting resources by sending legitimate-looking requests.</li>
+                <li><strong>Protocol Attacks:</strong> Exploit weaknesses in network protocols (such as TCP/IP) to disrupt service.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>4. SQL Injection</h2>
+            <p>SQL injection is a technique where attackers input malicious SQL statements into an input field of a web application, exploiting vulnerabilities in how the application communicates with its database.</p>
+            <p><strong>Impacts:</strong> Unauthorized access to databases, data manipulation, data theft.</p>
+            <p><strong>Prevention:</strong> Use prepared statements, parameterized queries, and proper input validation to prevent injection attacks.</p>
+        </section>
+
+        <section>
+            <h2>5. Man-in-the-Middle (MitM)</h2>
+            <p>A MitM attack happens when an attacker secretly relays and possibly alters the communication between two parties, usually to steal data or inject malicious content.</p>
+            <p><strong>Impacts:</strong> Data theft, unauthorized access to accounts, loss of confidentiality.</p>
+            <p><strong>Prevention:</strong> Use encryption protocols (like HTTPS, SSL/TLS) for communications, employ VPNs, and implement strong authentication methods.</p>
+        </section>
+
+        <section>
+            <h2>6. Command Injection</h2>
+            <p>Command injection is an attack in which the attacker takes advantage of a vulnerability in a web application to execute arbitrary commands on the host operating system. This allows attackers to run system-level commands.</p>
+            <p><strong>Impacts:</strong> Full control of the server, access to sensitive information, manipulation of files, disruption of operations.</p>
+            <p><strong>Prevention:</strong> Proper input validation, escaping user input, using parameterized queries, and ensuring limited system access for web applications can help mitigate the risk.</p>
+        </section>
+
+        <section>
+            <h2>7. Bluetooth Attacks</h2>
+            <p>Bluetooth technology exposes users to various security risks when not properly configured. Attackers can exploit Bluetooth vulnerabilities to steal data, track users, or gain unauthorized access to devices.</p>
+            <p><strong>Impacts:</strong> Data theft, unauthorized access, potential surveillance.</p>
+            <p><strong>Prevention:</strong> Turn off Bluetooth when not in use, make your device undiscoverable, and keep device firmware updated to avoid potential exploits.</p>
+            <ul>
+                <li><strong>Bluejacking:</strong> Sending unsolicited messages to a Bluetooth-enabled device.</li>
+                <li><strong>Bluesnarfing:</strong> Accessing a device's data without permission.</li>
+                <li><strong>BlueBorne:</strong> An exploit that allows attackers to take control of devices without interaction.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>8. Credential Stuffing</h2>
+            <p>Credential stuffing attacks involve using leaked username and password combinations to gain unauthorized access to accounts. The attacker leverages lists of credentials from previous data breaches and attempts to log in on different platforms.</p>
+            <p><strong>Impacts:</strong> Account compromise, data theft, loss of customer trust.</p>
+            <p><strong>Prevention:</strong> Implement 2FA, use CAPTCHA on login forms, and monitor for suspicious login attempts.</p>
+        </section>
+
+        <section>
+            <h2>9. Cross-Site Scripting (XSS)</h2>
+            <p>Cross-Site Scripting (XSS) is a type of attack where attackers inject malicious scripts into websites executed by users' browsers, resulting in session hijacking, defacement, or stealing sensitive information.</p>
+            <p><strong>Impacts:</strong> Data theft, loss of user trust, defacement of websites.</p>
+            <p><strong>Prevention:</strong> Sanitize user input, use Content Security Policy (CSP), and validate and encode outputs to prevent script execution.</p>
+        </section>
+
+        <section>
+            <h2>10. Zero-Day Exploits</h2>
+            <p>A zero-day exploit refers to a vulnerability that is unknown to the software maker and doesn't have an available patch. These are highly sought after by attackers since there are no immediate defenses available.</p>
+            <p><strong>Impacts:</strong> Unauthorized access, data breaches, loss of control over systems.</p>
+            <p><strong>Prevention:</strong> Regularly update software, employ intrusion detection systems, and participate in vulnerability disclosure programs to stay informed about new threats.</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Sheikh Nightshader Cyber Security. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>

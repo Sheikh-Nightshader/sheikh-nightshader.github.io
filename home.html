@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sheikh Nightshader Cyber Security - Stay safe online and learn how to protect against hackers.">
+    <title>Sheikh Nightshader Cyber Security</title>
+    <style>
+        body {
+            background-color: black;
+            color: green;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid green;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin: 0;
+        }
+
+        nav {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        nav a {
+            color: green;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 1.2em;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        main {
+            padding: 40px;
+            text-align: center;
+        }
+
+        footer {
+            padding: 20px;
+            text-align: center;
+            border-top: 2px solid green;
+            margin-top: 40px;
+        }
+
+        .intro {
+            font-size: 1.5em;
+            line-height: 1.8;
+        }
+
+        .info {
+            font-size: 1.2em;
+            margin-top: 20px;
+        }
+
+        .counter {
+            font-size: 1.5em;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Sheikh Nightshader Cyber Security</h1>
+        <nav>
+            <a href="index.html">Learn More</a>
+        </nav>
+    </header>
+<main>
+        <div class="image-container">
+            <img src="https://i.ibb.co/6mKTB81/cyber-sec-banner.jpg" alt="Sheikh Nightshader">
+        </div>
+
+    <main>
+        <section class="intro">
+            <p>Welcome to Sheikh Nightshader Cyber Security! Here you'll find expert advice on staying safe online, protecting yourself from hackers, and securing your digital world.</p>
+            <p>Explore our tips, tools, and guides on the latest cybersecurity threats and how to defend against them. Your safety in the digital space is our priority.</p>
+        </section>
+
+        <section class="info">
+            <h2>Your Information</h2>
+            <p id="ip-address">IP Address: <span id="ip"></span></p>
+            <p>User Agent: <span id="user-agent"></span></p>
+            <p>Your Location: <span id="location"></span></p> <!-- Added Location Section -->
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Sheikh Nightshader Cyber Security. All rights reserved.</p>
+    </footer>
+
+    <script>
+        async function fetchIP() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                document.getElementById('ip').textContent = data.ip;
+                await fetchLocation(data.ip); // Fetch location using IP
+            } catch (error) {
+                console.error('Error fetching IP:', error);
+                document.getElementById('ip').textContent = 'Unable to fetch IP address';
+            }
+        }
+
+        async function fetchLocation(ip) {
+            try {
+                const response = await fetch(`https://ipapi.co/${ip}/json/`);
+                const data = await response.json();
+                if (data.city && data.region && data.country) {
+                    document.getElementById('location').textContent = `${data.city}, ${data.region}, ${data.country}`;
+                } else {
+                    document.getElementById('location').textContent = 'Location not available';
+                }
+            } catch (error) {
+                console.error('Error fetching location:', error);
+                document.getElementById('location').textContent = 'Unable to fetch location';
+            }
+        }
+
+        function showUserAgent() {
+            document.getElementById('user-agent').textContent = navigator.userAgent;
+        }
+
+        async function fetchViewCount() {
+            try {
+                const response = await fetch('counter.php');
+                const count = await response.text();
+                document.getElementById('view-count').textContent = count;
+            } catch (error) {
+                console.error('Error fetching view count:', error);
+                document.getElementById('view-count').textContent = 'Unable to fetch view count';
+            }
+        }
+
+        window.onload = () => {
+            fetchIP();
+            showUserAgent();
+            fetchViewCount();
+        };
+    </script>
+
+</body>
+</html>
