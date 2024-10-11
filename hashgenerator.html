@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hash Generator</title>
+    <style>
+        body {
+            background-color: black;
+            color: green;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            text-align: center;
+            color: limegreen;
+        }
+        textarea, input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: #222;
+            color: #fff;
+        }
+        button {
+            background-color: limegreen;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #5cba3b;
+        }
+        h2 {
+            color: limegreen;
+        }
+        .hash-container {
+            margin-bottom: 15px;
+        }
+        .back-button {
+            display: block;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .back-button a {
+            color: limegreen;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .back-button a:hover {
+            color: #5cba3b;
+        }
+    </style>
+</head>
+<body>
+    <div class="back-button">
+        <a href="index.html">&larr; Back</a>
+    </div>
+    <h1>Hash Generator</h1>
+    <textarea id="input" rows="4" placeholder="Enter text to hash..."></textarea>
+    <button onclick="generateHashes()">Generate Hashes</button>
+    
+    <h2>Hashes:</h2>
+    
+    <div class="hash-container">
+        <p><strong>MD5:</strong> <span id="md5"></span> <button onclick="copyToClipboard('md5')">Copy</button></p>
+    </div>
+    <div class="hash-container">
+        <p><strong>SHA-1:</strong> <span id="sha1"></span> <button onclick="copyToClipboard('sha1')">Copy</button></p>
+    </div>
+    <div class="hash-container">
+        <p><strong>SHA-256:</strong> <span id="sha256"></span> <button onclick="copyToClipboard('sha256')">Copy</button></p>
+    </div>
+    <div class="hash-container">
+        <p><strong>SHA-512:</strong> <span id="sha512"></span> <button onclick="copyToClipboard('sha512')">Copy</button></p>
+    </div>
+    <div class="hash-container">
+        <p><strong>Base64:</strong> <span id="base64"></span> <button onclick="copyToClipboard('base64')">Copy</button></p>
+    </div>
+    <div class="hash-container">
+        <p><strong>SHA-3:</strong> <span id="sha3"></span> <button onclick="copyToClipboard('sha3')">Copy</button></p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+    <script>
+        function generateHashes() {
+            const input = document.getElementById('input').value;
+            document.getElementById('md5').textContent = CryptoJS.MD5(input).toString();
+            document.getElementById('sha1').textContent = CryptoJS.SHA1(input).toString();
+            document.getElementById('sha256').textContent = CryptoJS.SHA256(input).toString();
+            document.getElementById('sha512').textContent = CryptoJS.SHA512(input).toString();
+            document.getElementById('base64').textContent = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(input));
+            document.getElementById('sha3').textContent = CryptoJS.SHA3(input).toString();
+        }
+
+        function copyToClipboard(hashType) {
+            const hashValue = document.getElementById(hashType).textContent;
+            navigator.clipboard.writeText(hashValue).then(() => {
+                alert(hashType.toUpperCase() + ' copied to clipboard!');
+            }).catch(err => {
+                console.error('Error copying text: ', err);
+            });
+        }
+    </script>
+</body>
+</html>
