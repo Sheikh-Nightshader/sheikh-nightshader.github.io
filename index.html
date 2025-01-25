@@ -97,7 +97,7 @@
     </main>
 
     <footer>
-        <p>&copy; 2024 Sheikh Nightshader Cyber Security. All rights reserved.</p>
+        <p>&copy; 2025 Sheikh Nightshader Cyber Security. All rights reserved.</p>
     </footer>
 
     <script>
@@ -106,7 +106,7 @@
                 const response = await fetch('https://api.ipify.org?format=json');
                 const data = await response.json();
                 document.getElementById('ip').textContent = data.ip;
-                await fetchLocation(data.ip); // Fetch location using IP
+                await fetchLocation(data.ip); 
             } catch (error) {
                 console.error('Error fetching IP:', error);
                 document.getElementById('ip').textContent = 'Unable to fetch IP address';
