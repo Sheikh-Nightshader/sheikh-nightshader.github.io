@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sheikh's Web Based ROM Patcher</title>
+  <style>
+    body { background:#000; color:#0f0; font-family:monospace; text-align:center; padding:20px; }
+    h1 { font-size:2em; margin-bottom:10px; }
+    .section { border:1px solid #0f0; border-radius:8px; padding:15px; margin:15px auto; max-width:700px; text-align:left; }
+    label, input, button { margin:5px 0; display:block; width:100%; background:#000; color:#0f0; border:1px solid #0f0; padding:5px; }
+    button:hover { background:#0f0; color:#000; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <h1>Sheikh's Web Based ROM Patcher</h1>
+  <p>Created by Sheikh Nightshader</p>
+
+  <div class="section">
+    <h2>Instructions</h2>
+    <p>1. Upload your clean ROM file.</p>
+    <p>2. Upload the IPS patch file.</p>
+    <p>3. Click <strong>Apply Patch</strong> to generate and download the patched ROM.</p>
+  </div>
+
+  <div class="section">
+    <h2>Disclaimer</h2>
+    <p>Sheikh Nightshader is not responsible for misuse, distribution of copyrighted material, or damages.</p>
+  </div>
+
+  <div class="section">
+    <h2>Patcher</h2>
+    <label for="romFile">Upload ROM:</label>
+    <input type="file" id="romFile" accept=".smc,.sfc,.nes,.md,.bin">
+
+    <label for="patchFile">Upload IPS Patch:</label>
+    <input type="file" id="patchFile" accept=".ips">
+
+    <button onclick="applyPatch()">Apply Patch</button>
+  </div>
+
+  <div class="section">
+    <h2>Output</h2>
+    <p id="output">Patched ROM will be Downloaded.</p>
+  </div>
+
+  <script>
+    async function applyPatch() {
+      const romFile = document.getElementById('romFile').files[0];
+      const patchFile = document.getElementById('patchFile').files[0];
+      if (!romFile || !patchFile) {
+        document.getElementById('output').innerText = "Please upload both ROM and IPS patch files.";
+        return;
+      }
+
+      const romBuffer = await romFile.arrayBuffer();
+      const patchBuffer = await patchFile.arrayBuffer();
+      const patched = applyIPS(new Uint8Array(romBuffer), new Uint8Array(patchBuffer));
+
+      const blob = new Blob([patched], { type: "application/octet-stream" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "patched_" + romFile.name;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      document.getElementById('output').innerText = "Patched ROM downloaded successfully!";
+    }
+
+    function applyIPS(rom, patch) {
+      const MAGIC = "PATCH";
+      const EOF = "EOF";
+
+      let pos = 0;
+      for (let i = 0; i < MAGIC.length; i++) {
+        if (String.fromCharCode(patch[pos++]) !== MAGIC[i]) throw new Error("Invalid IPS file.");
+      }
+
+      while (true) {
+        let offset = (patch[pos++] << 16) | (patch[pos++] << 8) | patch[pos++];
+        if (offset === 0x454F46) break; // 'EOF'
+
+        let size = (patch[pos++] << 8) | patch[pos++];
+        if (size === 0) {
+          let rleSize = (patch[pos++] << 8) | patch[pos++];
+          let value = patch[pos++];
+          for (let i = 0; i < rleSize; i++) {
+            rom[offset + i] = value;
+          }
+        } else {
+          for (let i = 0; i < size; i++) {
+            rom[offset + i] = patch[pos++];
+          }
+        }
+      }
+      return rom;
+    }
+  </script>
+</body>
+</html>
