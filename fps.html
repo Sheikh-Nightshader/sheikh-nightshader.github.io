@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FPS Browser - Sheikh Nightshader</title>
+<style>
+  body { margin:0; background:#000; color:#0F0; font-family: monospace; overflow:hidden; }
+  canvas { display:block; margin:auto; background:#000; }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="1080" height="480"></canvas>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const SCREEN_WIDTH = 90;
+const SCREEN_HEIGHT = 40;
+const SCALE = 12;
+const MAP_WIDTH = 40;
+const MAP_HEIGHT = 30;
+const FOV = Math.PI/3;
+const DEPTH = 20;
+
+let keys = {};
+document.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+document.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+const SHADE = " .:-=+*#%$&@▓"; 
+
+const COLORS = {
+  enemy: "#FF0000",
+  ammo: "#00FF00",
+  health: "#00FFFF",
+  bullet: "#FFFF00",
+  gun: "#00FF00",
+  player: "#FFFFFF",
+  minimapWall: "#FFFFFF",
+  minimapFloor: "#222222",
+  minimapEnemy: "#FF0000",
+  minimapPickup: "#00FF00"
+};
+
+let weapon = 1;
+const WEAPON_ART = {
+  1: [ // Pistol
+    "    __     ",
+    "   |==|    ",
+    "   |  |    ",
+    "  /|  |\\   ",
+    " | |  | |  ",
+    " | |__| |  "
+  ],
+  2: [ // Shotgun
+    "    ____   ",
+    "   |=||=|  ",
+    "  /|=||=|\\ ",
+    " | |=||=| |",
+    " | |====| |",
+    " | |____| |"
+  ],
+  3: [ // chaingun
+    "     ___   ",
+    "   __|=|__ ",
+    "  |  | |  |",
+    " /|  | |  |\\",
+    "| |  | |  | |",
+    "| |__|_|__| |"
+  ],
+  4: [ // Plasma gun
+    "     .-.   ",
+    "    |###|  ",
+    "   /|###|\\ ",
+    "  | |###| |",
+    "  | |###| |",
+    "  | |###| |"
+  ]
+};
+function generateMap(){
+    let map = [];
+    for(let y=0;y<MAP_HEIGHT;y++){
+        let row='';
+        for(let x=0;x<MAP_WIDTH;x++){
+            if(x===0||y===0||x===MAP_WIDTH-1||y===MAP_HEIGHT-1) row+='#';
+            else if(Math.random()<0.1) row+='#';
+            else row+='.';
+        }
+        map.push(row);
+    }
+    return map;
+}
+
+let map = generateMap();
+let player = {x:MAP_WIDTH/2, y:MAP_HEIGHT/2, angle:0, health:25, ammo:45};
+let bullets = [];
+let enemies = [];
+let pickups = [];
+let wave = 1;
+let score = 0;
+let timer = 0;
+let lastTime = Date.now();
+
+function spawnEnemies(count){
+    enemies=[];
+    for(let i=0;i<count;i++){
+        let ex,ey;
+        do{
+            ex = Math.floor(Math.random()*(MAP_WIDTH-2))+1;
+            ey = Math.floor(Math.random()*(MAP_HEIGHT-2))+1;
+        }while(map[ey][ex]==='#');
+        enemies.push({x:ex+0.5, y:ey+0.5, alive:true, anim:0});
+    }
+}
+
+function spawnPickups(){
+    pickups=[];
+    for(let i=0;i<8;i++){
+        let px,py;
+        do{
+            px = Math.floor(Math.random()*(MAP_WIDTH-2))+1;
+            py = Math.floor(Math.random()*(MAP_HEIGHT-2))+1;
+        }while(map[py][px]==='#');
+        pickups.push({x:px+0.5,y:py+0.5,type:Math.random()<0.5?'ammo':'health',taken:false});
+    }
+}
+
+spawnEnemies(2+wave*2);
+spawnPickups();
+
+function castRays(){
+    let rays=[];
+    for(let col=0; col<SCREEN_WIDTH; col++){
+        let rayAngle = player.angle - FOV/2 + (col/SCREEN_WIDTH)*FOV;
+        let distance = 0;
+        let hit=false;
+        let eyeX = Math.sin(rayAngle);
+        let eyeY = Math.cos(rayAngle);
+        while(!hit && distance < DEPTH){
+            distance += 0.05;
+            let testX = Math.floor(player.x + eyeX*distance);
+            let testY = Math.floor(player.y + eyeY*distance);
+            if(testX<0||testX>=MAP_WIDTH||testY<0||testY>=MAP_HEIGHT){ hit=true; distance=DEPTH; }
+            else if(map[testY][testX]==='#'){ hit=true; }
+        }
+        rays.push(distance);
+    }
+    return rays;
+}
+
+function updateBullets(){
+    bullets.forEach(b=>{
+        b.x += Math.sin(b.angle)*0.3;
+        b.y += Math.cos(b.angle)*0.3;
+        enemies.forEach(e=>{
+            if(e.alive && Math.hypot(e.x-b.x,e.y-b.y)<0.5){ e.alive=false; score+=10; }
+        });
+    });
+    bullets = bullets.filter(b=>b.x>0 && b.x<MAP_WIDTH && b.y>0 && b.y<MAP_HEIGHT);
+}
+
+function moveEnemies(){
+    let dmg=0;
+    enemies.forEach(e=>{
+        if(!e.alive) return;
+        let dx = player.x - e.x;
+        let dy = player.y - e.y;
+        let dist = Math.hypot(dx,dy);
+        if(dist<0.5){ dmg+=1; }
+        else{
+            e.x += 0.03*(dx/Math.max(dist,0.1));
+            e.y += 0.03*(dy/Math.max(dist,0.1));
+            e.anim = (e.anim+1)%2;
+        }
+    });
+    return dmg;
+}
+
+function checkPickups(){
+    pickups.forEach(p=>{
+        if(!p.taken && Math.hypot(player.x-p.x,player.y-p.y)<0.5){
+            if(p.type==='ammo') player.ammo+=5;
+            else player.health=Math.min(player.health+5,25);
+            p.taken=true;
+        }
+    });
+}
+
+function movePlayer(){
+    let speed=0.1;
+    if(keys['arrowup']){
+        let nx = player.x + Math.sin(player.angle)*speed;
+        let ny = player.y + Math.cos(player.angle)*speed;
+        if(map[Math.floor(ny)][Math.floor(nx)]!=='#'){ player.x=nx; player.y=ny; }
+    }
+    if(keys['arrowdown']){
+        let nx = player.x - Math.sin(player.angle)*speed;
+        let ny = player.y - Math.cos(player.angle)*speed;
+        if(map[Math.floor(ny)][Math.floor(nx)]!=='#'){ player.x=nx; player.y=ny; }
+    }
+    if(keys['arrowleft']) player.angle-=0.05;
+    if(keys['arrowright']) player.angle+=0.05;
+    if(keys[' ']){
+        if(player.ammo>0){
+            bullets.push({x:player.x,y:player.y,angle:player.angle});
+            player.ammo--;
+        }
+        keys[' ']=false;
+    }
+    if(keys['1']){ weapon=1; keys['1']=false; }
+    if(keys['2']){ weapon=2; keys['2']=false; }
+    if(keys['3']){ weapon=3; keys['3']=false; }
+    if(keys['4']){ weapon=4; keys['4']=false; }
+}
+
+function drawGun(){
+    const gun = WEAPON_ART[weapon];
+    ctx.fillStyle="#00FF00";
+    gun.forEach((line,i)=>{
+        ctx.fillText(line, SCREEN_WIDTH*SCALE/2-30, SCREEN_HEIGHT*SCALE - (gun.length-i)*SCALE);
+    });
+}
+
+function drawEnemies(scale){
+    ctx.fillStyle="#FF0000";
+    enemies.forEach(e=>{
+        if(!e.alive) return;
+        let dx = e.x - player.x;
+        let dy = e.y - player.y;
+        let dist = Math.max(Math.hypot(dx,dy),0.1);
+        let angleDiff = Math.atan2(dx,dy) - player.angle;
+        if(angleDiff<-Math.PI) angleDiff+=2*Math.PI;
+        if(angleDiff>Math.PI) angleDiff-=2*Math.PI;
+        if(Math.abs(angleDiff)<FOV/2){
+            let col = Math.floor(SCREEN_WIDTH/2 + (angleDiff)/(FOV/2)*(SCREEN_WIDTH/2));
+            let height = Math.max(1,Math.floor(SCREEN_HEIGHT/dist/1.5));
+            let start = Math.floor(SCREEN_HEIGHT/2 - height/2);
+            const monster = ["{©©}","/|\\","/ \\"];
+            monster.forEach((line,j)=>{
+                let y=start+j;
+                if(y<SCREEN_HEIGHT-5) ctx.fillText(line, col*scale, y*scale);
+            });
+        }
+    });
+}
+
+function drawPickups(scale){
+    pickups.forEach(p=>{
+        if(p.taken) return;
+        let dx = p.x - player.x;
+        let dy = p.y - player.y;
+        let angleDiff = Math.atan2(dx,dy) - player.angle;
+        if(angleDiff<-Math.PI) angleDiff+=2*Math.PI;
+        if(angleDiff>Math.PI) angleDiff-=2*Math.PI;
+        if(Math.abs(angleDiff)<FOV/2){
+            let col = Math.floor(SCREEN_WIDTH/2 + (angleDiff)/(FOV/2)*(SCREEN_WIDTH/2));
+            let row = SCREEN_HEIGHT/2;
+            ctx.fillStyle = p.type==='health'?"#00FFFF":"#00FF00";
+            ctx.fillText(p.type==='health'?'♡':'⌐╦╦═─', col*scale, row*scale);
+        }
+    });
+}
+
+function drawBullets(scale){
+    ctx.fillStyle = "#FFFF00";
+    bullets.forEach(b=>{
+        let dx = b.x - player.x;
+        let dy = b.y - player.y;
+        let angleDiff = Math.atan2(dx,dy) - player.angle;
+        if(angleDiff<-Math.PI) angleDiff+=2*Math.PI;
+        if(angleDiff>Math.PI) angleDiff-=2*Math.PI;
+        if(Math.abs(angleDiff)<FOV/2){
+            let col = Math.floor(SCREEN_WIDTH/2 + (angleDiff)/(FOV/2)*(SCREEN_WIDTH/2));
+            let row = SCREEN_HEIGHT/2;
+            ctx.fillText('*', col*scale, row*scale);
+        }
+    });
+}
+
+function drawMiniMap(){
+    const miniScaleX = 6;
+    const miniScaleY = 6;
+    map.forEach((row,y)=>{
+        row.split('').forEach((ch,x)=>{
+            ctx.fillStyle = ch==='#'?"#FFFFFF":"#222222";
+            ctx.fillText('█', x*miniScaleX, y*miniScaleY);
+        });
+    });
+    pickups.forEach(p=>{
+        if(!p.taken){
+            ctx.fillStyle = "#00FF00";
+            ctx.fillText('H', Math.floor(p.x*miniScaleX), Math.floor(p.y*miniScaleY));
+        }
+    });
+    enemies.forEach(e=>{
+        if(e.alive){
+            ctx.fillStyle = "#FF0000";
+            ctx.fillText('E', Math.floor(e.x*miniScaleX), Math.floor(e.y*miniScaleY));
+        }
+    });
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText('P', Math.floor(player.x*miniScaleX), Math.floor(player.y*miniScaleY));
+}
+
+function render(){
+    ctx.fillStyle="#000";
+    ctx.fillRect(0,0,SCREEN_WIDTH*SCALE,SCREEN_HEIGHT*SCALE);
+    ctx.font=`${SCALE}px monospace`;
+    ctx.textBaseline="top";
+
+    let rays = castRays();
+    for(let x=0;x<SCREEN_WIDTH;x++){
+        let dist=rays[x];
+        let ceiling=SCREEN_HEIGHT/2 - SCREEN_HEIGHT/dist;
+        let floor=SCREEN_HEIGHT - ceiling;
+        for(let y=0;y<SCREEN_HEIGHT;y++){
+            let ch, color;
+            if(y<ceiling){
+                const t = y/ceiling;
+                const r = Math.floor(51*t);
+                const g = Math.floor(153*t);
+                const b = 255;
+                color = `rgb(${r},${g},${b})`;
+                ch=' ';
+            } else if(y>floor){
+                const t = (y-floor)/(SCREEN_HEIGHT-floor);
+                const r = Math.floor(139-80*t);
+                const g = Math.floor(90-50*t);
+                const b = Math.floor(43-20*t);
+                color = `rgb(${r},${g},${b})`;
+                ch='.';
+            } else {
+                let shadeIndex = Math.floor((dist/DEPTH)*(SHADE.length-1));
+                shadeIndex = Math.min(shadeIndex, SHADE.length-1);
+                ch = SHADE[SHADE.length-1 - shadeIndex];
+                const brightness = Math.max(0, 255 - dist*12);
+                color = `rgb(${brightness},${brightness},${brightness})`;
+            }
+            ctx.fillStyle=color;
+            ctx.fillText(ch,x*SCALE,y*SCALE);
+        }
+    }
+
+    drawGun();
+    drawEnemies(SCALE);
+    drawPickups(SCALE);
+    drawBullets(SCALE);
+    drawMiniMap();
+
+    const hud = `Wave:${wave}  Health:${player.health}  Ammo:${player.ammo}  Time:${timer}s  Score:${score}  Weapon:${weapon}`;
+    ctx.fillStyle="#FFFFFF";
+    const hudX = SCREEN_WIDTH*SCALE/2 - ctx.measureText(hud).width/2;
+    ctx.fillText(hud,hudX,10);
+}
+
+function gameLoop(){
+    const now = Date.now();
+    if(now-lastTime>1000){ timer++; lastTime=now; }
+
+    if(player.health>0){
+        movePlayer();
+        updateBullets();
+        let dmg=moveEnemies();
+        player.health-=dmg;
+        checkPickups();
+
+        if(enemies.every(e=>!e.alive)){
+            wave++;
+            map = generateMap();
+            spawnEnemies(2+wave*2);
+            spawnPickups();
+            score+=100;
+            timer=0;
+        }
+    } else {
+        ctx.fillStyle="#FF0000";
+        ctx.fillText("YOU DIED! Press R to restart",SCREEN_WIDTH*SCALE/2-150,SCREEN_HEIGHT*SCALE/2);
+        if(keys['r']){
+            player.health=25; player.ammo=25; wave=1; score=0; timer=0;
+            map = generateMap(); spawnEnemies(2+wave*2); spawnPickups(); keys['r']=false;
+        }
+    }
+
+    render();
+    requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+</body>
+</html>
