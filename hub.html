@@ -5,49 +5,74 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cybersecurity Education Hub</title>
     <style>
-        
         body {
             background-color: black;
             color: green;
             font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
             text-align: center;
-            padding: 50px;
         }
 
-      
         h1 {
             color: limegreen;
+            margin: 20px 0;
+        }
+
+        p {
+            font-size: 1.2em;
             margin-bottom: 30px;
         }
 
-       
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid green;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+
+        .navigation {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 50px;
+        }
+
         .button {
             display: inline-block;
             background-color: limegreen;
             color: black;
-            padding: 15px 30px;
-            margin: 10px;
+            padding: 12px 25px;
             text-decoration: none;
             border-radius: 5px;
-            transition: background-color 0.3s;
+            font-size: 1em;
+            transition: background-color 0.3s, transform 0.2s;
         }
 
-        
         .button:hover {
-            background-color: darkgreen;
+            background-color: #32cd32;
+            transform: scale(1.05);
+        }
+
+        footer {
+            border-top: 2px solid green;
+            padding: 20px;
+            margin-top: 40px;
         }
     </style>
 </head>
 <body>
-        <div class="image-container">
-            <img src="https://i.ibb.co/6mKTB81/cyber-sec-banner.jpg" alt="Sheikh Nightshader">
-        </div>
+
+    <div class="image-container">
+        <img src="https://i.ibb.co/6mKTB81/cyber-sec-banner.jpg" alt="Sheikh Nightshader">
+    </div>
+
     <h1>Sheikh Nightshader Cyber Security</h1>
     <h1>Cybersecurity Education Hub</h1>
     <p>Explore various topics to enhance your understanding of online safety and cybersecurity.</p>
 
-        </div>
-    
     <div class="navigation">
         <a href="index.html" class="button">Home</a>
         <a href="wifi.html" class="button">Dangers of Public WiFi</a>
@@ -59,10 +84,15 @@
         <a href="attacks.html" class="button">Types of Attacks</a>
         <a href="vpns-proxies.html" class="button">VPNs & Proxies</a>
         <a href="hash-generator-cracker.html" class="button">Hash Generator & Cracker</a>
-        <a href="https://github.com/Sheikh-Nightshader?tab=repositories" class="button">Sheikhs Github</a>
+        <a href="https://github.com/Sheikh-Nightshader?tab=repositories" class="button" target="_blank">Sheikhs Github</a>
         <a href="sheikh.html" class="button">About Sheikh</a>
         <a href="patcher.html" class="button">RomPatcher</a>
         <a href="fps.html" class="button">FPS GAME By Sheikh</a>
     </div>
+
+    <footer>
+        <p>&copy; 2025 Sheikh Nightshader Cyber Security. All rights reserved.</p>
+    </footer>
+
 </body>
 </html>
