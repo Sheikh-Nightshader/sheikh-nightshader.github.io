@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sheikh's Building Blocks Alpha 1.1</title>
+    <style>
+        body { margin: 0; background: #0f0f0f; color: #e0e0e0; font-family: 'Inter', sans-serif; overflow: hidden; display: flex; }
+        #sidebar { width: 300px; background: #181818; border-right: 1px solid #333; padding: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 100; box-shadow: 5px 0 15px rgba(0,0,0,0.5); overflow-y: auto; }
+        h1 { font-size: 1.3rem; color: #ffae00; margin: 0; border-bottom: 2px solid #ffae00; padding-bottom: 5px; }
+        .group { display: flex; flex-direction: column; gap: 6px; }
+        label { font-size: 0.65rem; text-transform: uppercase; color: #888; font-weight: bold; display: flex; justify-content: space-between; }
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+        button { background: #2a2a2a; border: 1px solid #444; color: white; padding: 8px; cursor: pointer; border-radius: 4px; transition: 0.2s; font-size: 0.75rem; }
+        button:hover { background: #3a3a3a; border-color: #ffae00; }
+        button.active { background: #ffae00; color: #000; font-weight: bold; border-color: #fff; }
+        .color-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; padding: 5px; background: #111; border-radius: 4px; }
+        .swatch { aspect-ratio: 1; border-radius: 2px; cursor: pointer; border: 2px solid transparent; }
+        .swatch.active { border-color: white; transform: scale(1.1); }
+        .danger { background: #442222; border-color: #662222; margin-top: 5px; }
+        #footer { font-size: 0.65rem; color: #555; background: #111; padding: 8px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h1>Sheikh's Blocks Alpha 1.1</h1>
+    
+    <div class="group">
+        <label>Camera Control</label>
+        <button id="btn-pan" onclick="togglePan()">PAN MODE: OFF</button>
+    </div>
+
+    <div class="group">
+        <label>Action Mode</label>
+        <div class="btn-grid">
+            <button id="mode-add" class="active" onclick="setMode('add')">CREATE</button>
+            <button id="mode-edit" onclick="setMode('edit')">EDIT</button>
+            <button id="mode-del" onclick="setMode('del')">DELETE</button>
+        </div>
+    </div>
+
+    <div class="group">
+        <label>Creation Style</label>
+        <div class="btn-grid">
+            <button id="style-single" class="active" onclick="setStyle('single')">SINGLE</button>
+            <button id="style-line" onclick="setStyle('line')">LINE</button>
+            <button id="style-sector" onclick="setStyle('sector')">SECTOR</button>
+        </div>
+    </div>
+
+    <div class="group">
+        <label>Shape</label>
+        <div class="btn-grid">
+            <button id="shape-box" class="shape-btn active" onclick="setShape('box')">CUBE</button>
+            <button id="shape-sphere" class="shape-btn" onclick="setShape('sphere')">SPHERE</button>
+        </div>
+    </div>
+
+    <div class="group">
+        <label>Color</label>
+        <div class="color-grid" id="colors"></div>
+    </div>
+
+    <button class="danger" onclick="clearAll()">CLEAR ALL</button>
+
+    <div id="footer">
+        <b>Line Mode:</b> Click Start, then Click End.<br>
+        <b>Sector Mode:</b> Clicks create a 5x5 disk.<br>
+        <b>Pan Mode:</b> Left-click to slide camera.
+    </div>
+</div>
+
+<script type="module">
+    import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
+    import { OrbitControls } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/controls/OrbitControls.js';
+    import { TransformControls } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/controls/TransformControls.js';
+
+    let mode = 'add', buildStyle = 'single', currentShape = 'box', currentColor = 0xffae00;
+    let lineStart = null;
+    const objects = [];
+    const colorPalette = [0xffae00, 0xff0055, 0x00ff88, 0x00d4ff, 0x9900ff, 0xffffff, 0x444444, 0x8b4513, 0x228b22, 0xffd700];
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0a0a);
+    const camera = new THREE.PerspectiveCamera(70, (window.innerWidth - 300) / window.innerHeight, 0.1, 1000);
+    camera.position.set(15, 15, 15);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth - 300, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    const transformControls = new TransformControls(camera, renderer.domElement);
+    scene.add(transformControls);
+
+    transformControls.addEventListener('dragging-changed', e => controls.enabled = !e.value);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+    sun.position.set(10, 20, 10);
+    scene.add(sun);
+
+    const grid = new THREE.GridHelper(40, 40, 0x333333, 0x222222);
+    scene.add(grid);
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    window.togglePan = () => {
+        const isPanning = controls.mouseButtons.LEFT === THREE.MOUSE.PAN;
+        if (isPanning) {
+            controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
+            document.getElementById('btn-pan').innerText = "PAN MODE: OFF";
+            document.getElementById('btn-pan').classList.remove('active');
+        } else {
+            controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
+            document.getElementById('btn-pan').innerText = "PAN MODE: ON";
+            document.getElementById('btn-pan').classList.add('active');
+        }
+    };
+
+    window.setMode = (m) => {
+        mode = m; lineStart = null;
+        transformControls.detach();
+        document.querySelectorAll('#mode-add, #mode-edit, #mode-del').forEach(b => b.classList.remove('active'));
+        document.getElementById(`mode-${m}`).classList.add('active');
+    };
+
+    window.setStyle = (s) => {
+        buildStyle = s; lineStart = null;
+        document.querySelectorAll('#style-single, #style-line, #style-sector').forEach(b => b.classList.remove('active'));
+        document.getElementById(`style-${s}`).classList.add('active');
+    };
+
+    window.setShape = (s) => {
+        currentShape = s;
+        document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`shape-${s}`).classList.add('active');
+    };
+
+    window.clearAll = () => { if(confirm("Clear build?")) { objects.forEach(o => scene.remove(o)); objects.length = 0; transformControls.detach(); }};
+
+    function createBlock(pos) {
+        let geo = currentShape === 'box' ? new THREE.BoxGeometry(1, 1, 1) : new THREE.SphereGeometry(0.6, 16, 16);
+        const mesh = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({ color: currentColor }));
+        mesh.position.copy(pos);
+        mesh.position.set(Math.round(mesh.position.x), Math.round(mesh.position.y), Math.round(mesh.position.z));
+        scene.add(mesh);
+        objects.push(mesh);
+    }
+
+
+    renderer.domElement.addEventListener('mousedown', (e) => {
+
+        if (controls.mouseButtons.LEFT === THREE.MOUSE.PAN) return;
+
+        mouse.x = ((e.clientX - 300) / (window.innerWidth - 300)) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects([grid, ...objects]);
+
+        if (intersects.length > 0) {
+            const intersect = intersects[0];
+            const point = intersect.point.clone().add(intersect.face ? intersect.face.normal.multiplyScalar(0.5) : new THREE.Vector3(0,0.5,0));
+
+            if (mode === 'add') {
+                if (buildStyle === 'single') {
+                    createBlock(point);
+                } else if (buildStyle === 'line') {
+                    if (!lineStart) {
+                        lineStart = point.clone();
+                        createBlock(lineStart);
+                    } else {
+                        // Draw line of blocks
+                        let start = lineStart.clone();
+                        let end = point.clone();
+                        let dist = start.distanceTo(end);
+                        let steps = Math.ceil(dist);
+                        for(let i = 1; i <= steps; i++) {
+                            let tempPos = new THREE.Vector3().lerpVectors(start, end, i/steps);
+                            createBlock(tempPos);
+                        }
+                        lineStart = null; 
+                    }
+                } else if (buildStyle === 'sector') {
+                    for(let x = -2; x <= 2; x++) {
+                        for(let z = -2; z <= 2; z++) {
+                            if (Math.sqrt(x*x + z*z) <= 2.5) { 
+                                createBlock(point.clone().add(new THREE.Vector3(x, 0, z)));
+                            }
+                        }
+                    }
+                }
+            } else if (mode === 'edit' && intersect.object !== grid) {
+                transformControls.attach(intersect.object);
+            } else if (mode === 'del' && intersect.object !== grid) {
+                transformControls.detach();
+                scene.remove(intersect.object);
+                objects.splice(objects.indexOf(intersect.object), 1);
+            }
+        }
+    });
+
+    
+    const colorContainer = document.getElementById('colors');
+    colorPalette.forEach((c, i) => {
+        const div = document.createElement('div');
+        div.className = 'swatch' + (i === 0 ? ' active' : '');
+        div.style.backgroundColor = `#${c.toString(16).padStart(6, '0')}`;
+        div.onclick = () => { currentColor = c; document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active')); div.classList.add('active'); };
+        colorContainer.appendChild(div);
+    });
+
+    function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
+    animate();
+</script>
+</body>
+</html>
